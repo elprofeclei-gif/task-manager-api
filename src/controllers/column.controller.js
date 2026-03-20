@@ -2,7 +2,12 @@ import Column from '../models/Column.js';
 import Board from '../models/Board.js';
 
 /**
- * Verifica que el tablero existe y pertenece al usuario autenticado
+ * Verifica que el tablero exista y pertenezca al usuario autenticado.
+ * Se usa en todas las operaciones de columnas para garantizar autorización.
+ *
+ * @param {string} boardId - ID del tablero a verificar
+ * @param {string} usuarioId - ID del usuario autenticado
+ * @throws {Error} 404 si el tablero no existe, 403 si no pertenece al usuario
  */
 const verificarBoard = async (boardId, usuarioId) => {
   const board = await Board.findById(boardId);
@@ -22,7 +27,7 @@ const verificarBoard = async (boardId, usuarioId) => {
 
 /**
  * GET /api/boards/:boardId/columns
- * Obtiene todas las columnas de un tablero ordenadas por posición
+ * Devuelve todas las columnas de un tablero ordenadas por el campo `orden`.
  */
 export const obtenerColumnas = async (req, res, next) => {
   try {
@@ -36,7 +41,7 @@ export const obtenerColumnas = async (req, res, next) => {
 
 /**
  * POST /api/boards/:boardId/columns
- * Crea una nueva columna en un tablero
+ * Crea una nueva columna dentro de un tablero.
  */
 export const crearColumna = async (req, res, next) => {
   try {
@@ -58,15 +63,22 @@ export const crearColumna = async (req, res, next) => {
 
 /**
  * PUT /api/boards/:boardId/columns/:id
- * Actualiza una columna existente
+ * Actualiza el nombre y/o posición de una columna.
+ *
+ * Solo se permiten actualizar los campos `nombre` y `orden`.
+ * Se desestructura req.body explícitamente para evitar que un cliente
+ * pueda sobreescribir el campo `board` y mover la columna a otro tablero.
  */
 export const actualizarColumna = async (req, res, next) => {
   try {
     await verificarBoard(req.params.boardId, req.usuario._id);
 
+    // Whitelist de campos permitidos — nunca pasar req.body directo
+    const { nombre, orden } = req.body;
+
     const columna = await Column.findOneAndUpdate(
       { _id: req.params.id, board: req.params.boardId },
-      req.body,
+      { nombre, orden },
       { new: true, runValidators: true }
     );
 
@@ -84,7 +96,8 @@ export const actualizarColumna = async (req, res, next) => {
 
 /**
  * DELETE /api/boards/:boardId/columns/:id
- * Elimina una columna
+ * Elimina una columna del tablero.
+ * Solo puede eliminarla el propietario del tablero.
  */
 export const eliminarColumna = async (req, res, next) => {
   try {
