@@ -5,6 +5,7 @@ import User from '../models/User.js';
  * Verifica el token JWT enviado en el header Authorization
  * Agrega el usuario autenticado en req.usuario
  */
+
 const protegerRuta = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -16,8 +17,13 @@ const protegerRuta = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Adjuntar usuario al request (sin la contraseña)
+     // Adjuntar usuario al request (sin la contraseña)
+
     req.usuario = await User.findById(decoded.id).select('-password');
+
+    if (!req.usuario) {
+      return res.status(401).json({ mensaje: '*** Usuario no encontrado ***' });
+    }
 
     next();
   } catch (error) {

@@ -13,27 +13,22 @@ const transporter = nodemailer.createTransport({
   socketTimeout: 5000,
 });
 
-/**
- * Genera un código numérico aleatorio de 6 dígitos
- */
 export const generarCodigo = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-/**
- * Intenta enviar el email. Si falla, muestra el código en consola (modo desarrollo)
- */
 const enviarEmail = async (opciones) => {
   try {
     await transporter.sendMail(opciones);
   } catch (error) {
-    // En desarrollo mostramos el código en consola si el email falla
+    const match = opciones.html.match(/\d{6}/);
     console.log('-----------------------------------');
     console.log('📧 EMAIL NO ENVIADO (modo dev)');
     console.log(`📬 Para: ${opciones.to}`);
     console.log(`📋 Asunto: ${opciones.subject}`);
-    console.log(`🔑 Código: ${opciones.html.match(/\d{6}/)[0]}`);
+    console.log(`🔑 Código: ${match ? match[0] : 'N/A'}`);
     console.log('-----------------------------------');
+    throw error;
   }
 };
 
