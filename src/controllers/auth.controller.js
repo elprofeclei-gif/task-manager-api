@@ -253,11 +253,14 @@ export const forgotPassword = async (req, res, next) => {
     try {
       await enviarCodigoResetPassword(email, usuario.nombre, codigo);
     } catch (emailError) {
-      // Rollback: restaurar token anterior si el email no pudo enviarse
-      usuario.resetPasswordToken = codigoAnterior;
-      usuario.resetPasswordExpires = expiresAnterior;
-      await usuario.save();
-      throw emailError;
+      if (process.env.NODE_ENV === 'production') {
+        // Rollback: restaurar token anterior si el email no pudo enviarse
+        usuario.resetPasswordToken = codigoAnterior;
+        usuario.resetPasswordExpires = expiresAnterior;
+        await usuario.save();
+        throw emailError;
+      }
+      // En dev: el código ya está guardado en BD, el log en consola es suficiente
     }
 
     res.json({

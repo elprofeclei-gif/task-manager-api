@@ -3,7 +3,7 @@ import env from '../config/env.js';
 
 const transporter = nodemailer.createTransport({
   host: 'sandbox.smtp.mailtrap.io',
-  port: 2525,
+  port: 587, // ← cambiar de 2525 a 587
   auth: {
     user: env.EMAIL_USER,
     pass: env.EMAIL_PASS,
